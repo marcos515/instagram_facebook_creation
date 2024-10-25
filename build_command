@@ -1,0 +1,1 @@
+pyinstaller --onefile --collect-datas=fake_useragent --hidden-import fake_useragent --name vinculador main.py

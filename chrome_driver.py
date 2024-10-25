@@ -5,10 +5,9 @@ from fake_useragent import UserAgent
 
 ua = UserAgent(platforms='pc')
 
-def get_chromedriver(use_proxy=False):
+def get_chromedriver(proxy, headless=False):
     try:
-        # Fetch proxy details from environment variables
-        PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS = os.getenv('PROXY').split(':')
+        PROXY_HOST, PROXY_PORT, PROXY_USER, PROXY_PASS = proxy.split(":")
         print(f"Using proxy: {PROXY_HOST}:{PROXY_PORT} with user: {PROXY_USER}")
     except ValueError:
         raise ValueError("PROXY environment variable is not set correctly. Use format 'host:port:user:pass'.")
@@ -73,17 +72,21 @@ def get_chromedriver(use_proxy=False):
     user_agent = ua.random
     chrome_options.add_argument(f'--user-agent={user_agent}')
     chrome_options.add_argument("--start-maximized")  # Adiciona a janela cheia
-    if use_proxy:
-        pluginfile = os.path.join(path, 'proxy_auth_plugin.zip')
+    
+    pluginfile = os.path.join(path, 'proxy_auth_plugin.zip')
 
-        # Create the proxy plugin zip file
-        with zipfile.ZipFile(pluginfile, 'w') as zp:
-            zp.writestr("manifest.json", manifest_json)
-            zp.writestr("background.js", background_js)
-        chrome_options.add_extension(pluginfile)
+    # Create the proxy plugin zip file
+    with zipfile.ZipFile(pluginfile, 'w') as zp:
+        zp.writestr("manifest.json", manifest_json)
+        zp.writestr("background.js", background_js)
+    chrome_options.add_extension(pluginfile)
 
     # Set the path to the Chrome binary and driver
     chrome_options.binary_location = '/usr/bin/google-chrome'  # Adjust if necessary
+    
+    if headless:
+        chrome_options.add_argument("--headless")
+        
     driver = webdriver.Chrome(options=chrome_options)
     return driver, user_agent
 
